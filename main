@@ -644,10 +644,62 @@ function XenoUI:CreateWindow(config)
             local value = math.floor(percent * 100)
             
             SliderFill.Size = UDim2.new(percent, 0, 1, 0)
-            TransValue.Text = tostring(value)
+            TransValue.Text = tostring(value) .. "%"
             Window.Settings.Transparency = value
             
-            Main.BackgroundTransparency = value / 100
+            local transparency = value / 100
+            
+            -- Apply transparency to all UI elements
+            Main.BackgroundTransparency = transparency
+            TopBar.BackgroundTransparency = transparency
+            TopBar:FindFirstChild("Frame").BackgroundTransparency = transparency
+            ContentContainer.BackgroundTransparency = transparency
+            SettingsPanel.BackgroundTransparency = transparency
+            UserInfoPanel.BackgroundTransparency = transparency
+            
+            -- Update all tab buttons
+            for _, tab in pairs(TabContainer:GetChildren()) do
+                if tab:IsA("TextButton") then
+                    tab.BackgroundTransparency = transparency
+                end
+            end
+            
+            -- Update all elements in content
+            for _, content in pairs(ContentContainer:GetChildren()) do
+                if content:IsA("ScrollingFrame") then
+                    for _, element in pairs(content:GetChildren()) do
+                        if element:IsA("Frame") and element.Name ~= "SliderDot" then
+                            element.BackgroundTransparency = transparency
+                            
+                            -- Update nested frames (like toggles, sliders, etc)
+                            for _, child in pairs(element:GetDescendants()) do
+                                if child:IsA("Frame") and child.Name ~= "ToggleInner" and child.Name ~= "SliderDot" and child.Name ~= "SliderFill" then
+                                    child.BackgroundTransparency = transparency
+                                end
+                                if child:IsA("TextBox") then
+                                    child.BackgroundTransparency = transparency
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            
+            -- Update settings panel elements
+            for _, element in pairs(SettingsScroll:GetChildren()) do
+                if element:IsA("Frame") then
+                    element.BackgroundTransparency = transparency
+                    
+                    for _, child in pairs(element:GetDescendants()) do
+                        if child:IsA("Frame") and child.Name ~= "ToggleInner" and child.Name ~= "SliderFill" then
+                            child.BackgroundTransparency = transparency
+                        end
+                        if child:IsA("TextBox") then
+                            child.BackgroundTransparency = transparency
+                        end
+                    end
+                end
+            end
         end
     end)
     
