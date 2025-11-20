@@ -36,38 +36,59 @@ end
 local Themes = {
     Default = {
         Primary = Color3.fromRGB(40, 120, 255),
-        Background = Color3.fromRGB(18, 18, 18),
-        Secondary = Color3.fromRGB(22, 22, 22),
-        TopBar = Color3.fromRGB(15, 15, 15),
-        Element = Color3.fromRGB(30, 30, 30)
+        Secondary = Color3.fromRGB(30, 30, 30),
+        Tertiary = Color3.fromRGB(22, 22, 22),
+        Text = Color3.fromRGB(255, 255, 255),
+        SubText = Color3.fromRGB(180, 180, 180)
     },
-    Purple = {
-        Primary = Color3.fromRGB(138, 43, 226),
-        Background = Color3.fromRGB(18, 18, 18),
-        Secondary = Color3.fromRGB(22, 22, 22),
-        TopBar = Color3.fromRGB(15, 15, 15),
-        Element = Color3.fromRGB(30, 30, 30)
+    Amber = {
+        Primary = Color3.fromRGB(255, 153, 0),
+        Secondary = Color3.fromRGB(30, 30, 30),
+        Tertiary = Color3.fromRGB(22, 22, 22),
+        Text = Color3.fromRGB(255, 255, 255),
+        SubText = Color3.fromRGB(180, 180, 180)
+    },
+    Amethyst = {
+        Primary = Color3.fromRGB(153, 51, 255),
+        Secondary = Color3.fromRGB(30, 30, 30),
+        Tertiary = Color3.fromRGB(22, 22, 22),
+        Text = Color3.fromRGB(255, 255, 255),
+        SubText = Color3.fromRGB(180, 180, 180)
+    },
+    Bloom = {
+        Primary = Color3.fromRGB(113, 93, 133),
+        Secondary = Color3.fromRGB(30, 30, 30),
+        Tertiary = Color3.fromRGB(22, 22, 22),
+        Text = Color3.fromRGB(255, 255, 255),
+        SubText = Color3.fromRGB(180, 180, 180)
+    },
+    DarkBlue = {
+        Primary = Color3.fromRGB(0, 102, 204),
+        Secondary = Color3.fromRGB(30, 30, 30),
+        Tertiary = Color3.fromRGB(22, 22, 22),
+        Text = Color3.fromRGB(255, 255, 255),
+        SubText = Color3.fromRGB(180, 180, 180)
     },
     Green = {
-        Primary = Color3.fromRGB(46, 204, 113),
-        Background = Color3.fromRGB(18, 18, 18),
-        Secondary = Color3.fromRGB(22, 22, 22),
-        TopBar = Color3.fromRGB(15, 15, 15),
-        Element = Color3.fromRGB(30, 30, 30)
+        Primary = Color3.fromRGB(0, 255, 140),
+        Secondary = Color3.fromRGB(30, 30, 30),
+        Tertiary = Color3.fromRGB(22, 22, 22),
+        Text = Color3.fromRGB(255, 255, 255),
+        SubText = Color3.fromRGB(180, 180, 180)
     },
-    Red = {
-        Primary = Color3.fromRGB(231, 76, 60),
-        Background = Color3.fromRGB(18, 18, 18),
-        Secondary = Color3.fromRGB(22, 22, 22),
-        TopBar = Color3.fromRGB(15, 15, 15),
-        Element = Color3.fromRGB(30, 30, 30)
+    Light = {
+        Primary = Color3.fromRGB(40, 120, 255),
+        Secondary = Color3.fromRGB(245, 245, 245),
+        Tertiary = Color3.fromRGB(235, 235, 235),
+        Text = Color3.fromRGB(30, 30, 30),
+        SubText = Color3.fromRGB(100, 100, 100)
     },
-    Orange = {
-        Primary = Color3.fromRGB(230, 126, 34),
-        Background = Color3.fromRGB(18, 18, 18),
-        Secondary = Color3.fromRGB(22, 22, 22),
-        TopBar = Color3.fromRGB(15, 15, 15),
-        Element = Color3.fromRGB(30, 30, 30)
+    Ocean = {
+        Primary = Color3.fromRGB(0, 168, 168),
+        Secondary = Color3.fromRGB(30, 30, 30),
+        Tertiary = Color3.fromRGB(22, 22, 22),
+        Text = Color3.fromRGB(255, 255, 255),
+        SubText = Color3.fromRGB(180, 180, 180)
     }
 }
 
@@ -438,8 +459,8 @@ function XenoUI:CreateWindow(config)
             BorderSizePixel = 0,
             Visible = false,
             ClipsDescendants = true,
-            ZIndex = 10,
-            Parent = DropdownFrame
+            ZIndex = 100,
+            Parent = SettingsScroll
         })
         
         Create("UICorner", {
@@ -454,6 +475,7 @@ function XenoUI:CreateWindow(config)
             ScrollBarThickness = 4,
             ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60),
             CanvasSize = UDim2.new(0, 0, 0, 0),
+            ZIndex = 101,
             Parent = DropdownList
         })
         
@@ -475,6 +497,7 @@ function XenoUI:CreateWindow(config)
                 Font = Enum.Font.Gotham,
                 TextSize = 13,
                 TextColor3 = Color3.fromRGB(255, 255, 255),
+                ZIndex = 102,
                 Parent = ListContainer
             })
             
@@ -508,6 +531,12 @@ function XenoUI:CreateWindow(config)
             opened = not opened
             
             if opened then
+                -- Position dropdown list relative to the settings scroll
+                local dropdownPos = DropdownFrame.AbsolutePosition
+                local scrollPos = SettingsScroll.AbsolutePosition
+                local relativeY = dropdownPos.Y - scrollPos.Y + DropdownFrame.AbsoluteSize.Y + 5
+                
+                DropdownList.Position = UDim2.new(0, dropdownPos.X - scrollPos.X + DropdownFrame.AbsoluteSize.X - 120, 0, relativeY)
                 DropdownList.Visible = true
                 local height = math.min(#options * 32, 150)
                 Tween(DropdownList, {Size = UDim2.new(0, 110, 0, height)}, 0.2)
@@ -553,6 +582,17 @@ function XenoUI:CreateWindow(config)
                 end
             end
         end
+        
+        -- Update settings elements
+        for _, element in pairs(SettingsScroll:GetChildren()) do
+            if element:IsA("Frame") and element.Name ~= "Transparency" then
+                element.BackgroundColor3 = CurrentTheme.Element
+            end
+        end
+        
+        TransparencyFrame.BackgroundColor3 = CurrentTheme.Element
+        TransValue.TextColor3 = CurrentTheme.Primary
+        SliderFill.BackgroundColor3 = CurrentTheme.Primary
     end)
     
     -- Transparency Slider
@@ -585,7 +625,7 @@ function XenoUI:CreateWindow(config)
         Position = UDim2.new(1, -70, 0, 8),
         BackgroundTransparency = 1,
         Font = Enum.Font.GothamBold,
-        Text = tostring(Window.Settings.Transparency),
+        Text = tostring(Window.Settings.Transparency) .. "%",
         TextColor3 = CurrentTheme.Primary,
         TextSize = 15,
         TextXAlignment = Enum.TextXAlignment.Right,
