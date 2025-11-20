@@ -1,8 +1,11 @@
+-- Xeno UI Library v2.0 with Settings & User Info
 local XenoUI = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
 -- Utility Functions
 local function Tween(obj, props, duration, style, direction)
@@ -29,12 +32,59 @@ local function Create(class, props)
     return obj
 end
 
+-- Theme Presets
+local Themes = {
+    Default = {
+        Primary = Color3.fromRGB(40, 120, 255),
+        Background = Color3.fromRGB(18, 18, 18),
+        Secondary = Color3.fromRGB(22, 22, 22),
+        TopBar = Color3.fromRGB(15, 15, 15),
+        Element = Color3.fromRGB(30, 30, 30)
+    },
+    Purple = {
+        Primary = Color3.fromRGB(138, 43, 226),
+        Background = Color3.fromRGB(18, 18, 18),
+        Secondary = Color3.fromRGB(22, 22, 22),
+        TopBar = Color3.fromRGB(15, 15, 15),
+        Element = Color3.fromRGB(30, 30, 30)
+    },
+    Green = {
+        Primary = Color3.fromRGB(46, 204, 113),
+        Background = Color3.fromRGB(18, 18, 18),
+        Secondary = Color3.fromRGB(22, 22, 22),
+        TopBar = Color3.fromRGB(15, 15, 15),
+        Element = Color3.fromRGB(30, 30, 30)
+    },
+    Red = {
+        Primary = Color3.fromRGB(231, 76, 60),
+        Background = Color3.fromRGB(18, 18, 18),
+        Secondary = Color3.fromRGB(22, 22, 22),
+        TopBar = Color3.fromRGB(15, 15, 15),
+        Element = Color3.fromRGB(30, 30, 30)
+    },
+    Orange = {
+        Primary = Color3.fromRGB(230, 126, 34),
+        Background = Color3.fromRGB(18, 18, 18),
+        Secondary = Color3.fromRGB(22, 22, 22),
+        TopBar = Color3.fromRGB(15, 15, 15),
+        Element = Color3.fromRGB(30, 30, 30)
+    }
+}
+
 -- Main Window Function
 function XenoUI:CreateWindow(config)
     local Window = {
         Tabs = {},
-        CurrentTab = nil
+        CurrentTab = nil,
+        Settings = {
+            Theme = "Default",
+            Transparency = 0,
+            ShowUserInfo = config.ShowUserInfo ~= false,
+            Anonymous = config.Anonymous or false
+        }
     }
+    
+    local CurrentTheme = Themes[Window.Settings.Theme]
     
     -- Create ScreenGui
     local ScreenGui = Create("ScreenGui", {
@@ -49,7 +99,7 @@ function XenoUI:CreateWindow(config)
         Name = "Main",
         Size = UDim2.new(0, 600, 0, 450),
         Position = UDim2.new(0.5, -300, 0.5, -225),
-        BackgroundColor3 = Color3.fromRGB(18, 18, 18),
+        BackgroundColor3 = CurrentTheme.Background,
         BorderSizePixel = 0,
         Parent = ScreenGui
     })
@@ -78,7 +128,7 @@ function XenoUI:CreateWindow(config)
     local TopBar = Create("Frame", {
         Name = "TopBar",
         Size = UDim2.new(1, 0, 0, 50),
-        BackgroundColor3 = Color3.fromRGB(15, 15, 15),
+        BackgroundColor3 = CurrentTheme.TopBar,
         BorderSizePixel = 0,
         Parent = Main
     })
@@ -92,7 +142,7 @@ function XenoUI:CreateWindow(config)
     Create("Frame", {
         Size = UDim2.new(1, 0, 0, 10),
         Position = UDim2.new(0, 0, 1, -10),
-        BackgroundColor3 = Color3.fromRGB(15, 15, 15),
+        BackgroundColor3 = CurrentTheme.TopBar,
         BorderSizePixel = 0,
         Parent = TopBar
     })
@@ -100,7 +150,7 @@ function XenoUI:CreateWindow(config)
     -- Title
     local Title = Create("TextLabel", {
         Name = "Title",
-        Size = UDim2.new(1, -100, 1, 0),
+        Size = UDim2.new(1, -150, 1, 0),
         Position = UDim2.new(0, 50, 0, 0),
         BackgroundTransparency = 1,
         Font = Enum.Font.GothamBold,
@@ -119,6 +169,24 @@ function XenoUI:CreateWindow(config)
         BackgroundTransparency = 1,
         Image = config.Logo or "rbxassetid://0",
         Parent = TopBar
+    })
+    
+    -- Settings Button
+    local SettingsBtn = Create("TextButton", {
+        Name = "SettingsBtn",
+        Size = UDim2.new(0, 35, 0, 35),
+        Position = UDim2.new(1, -83, 0.5, -17.5),
+        BackgroundColor3 = Color3.fromRGB(60, 60, 60),
+        Text = "⚙",
+        Font = Enum.Font.GothamBold,
+        TextSize = 18,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        Parent = TopBar
+    })
+    
+    Create("UICorner", {
+        CornerRadius = UDim.new(0, 8),
+        Parent = SettingsBtn
     })
     
     -- Close Button
@@ -153,10 +221,77 @@ function XenoUI:CreateWindow(config)
         Tween(CloseBtn, {BackgroundColor3 = Color3.fromRGB(220, 50, 50)}, 0.2)
     end)
     
+    SettingsBtn.MouseEnter:Connect(function()
+        Tween(SettingsBtn, {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}, 0.2)
+    end)
+    
+    SettingsBtn.MouseLeave:Connect(function()
+        Tween(SettingsBtn, {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}, 0.2)
+    end)
+    
+    -- User Info Panel (Bottom Left)
+    local UserInfoPanel = Create("Frame", {
+        Name = "UserInfoPanel",
+        Size = UDim2.new(0, 160, 0, 60),
+        Position = UDim2.new(0, 10, 1, -70),
+        BackgroundColor3 = CurrentTheme.Element,
+        BorderSizePixel = 0,
+        Visible = Window.Settings.ShowUserInfo,
+        Parent = Main
+    })
+    
+    Create("UICorner", {
+        CornerRadius = UDim.new(0, 8),
+        Parent = UserInfoPanel
+    })
+    
+    local Avatar = Create("ImageLabel", {
+        Name = "Avatar",
+        Size = UDim2.new(0, 45, 0, 45),
+        Position = UDim2.new(0, 8, 0.5, -22.5),
+        BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+        BorderSizePixel = 0,
+        Image = Window.Settings.Anonymous and "" or Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150),
+        Parent = UserInfoPanel
+    })
+    
+    Create("UICorner", {
+        CornerRadius = UDim.new(1, 0),
+        Parent = Avatar
+    })
+    
+    local UsernameLabel = Create("TextLabel", {
+        Name = "Username",
+        Size = UDim2.new(1, -65, 0, 18),
+        Position = UDim2.new(0, 58, 0, 10),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamBold,
+        Text = Window.Settings.Anonymous and "Anonymous" or ("@" .. LocalPlayer.Name),
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextSize = 12,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextTruncate = Enum.TextTruncate.AtEnd,
+        Parent = UserInfoPanel
+    })
+    
+    local DisplayNameLabel = Create("TextLabel", {
+        Name = "DisplayName",
+        Size = UDim2.new(1, -65, 0, 18),
+        Position = UDim2.new(0, 58, 0, 30),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.Gotham,
+        Text = Window.Settings.Anonymous and "User" or LocalPlayer.DisplayName,
+        TextColor3 = Color3.fromRGB(180, 180, 180),
+        TextSize = 11,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextTruncate = Enum.TextTruncate.AtEnd,
+        Parent = UserInfoPanel
+    })
+    
     -- Tab Container
     local TabContainer = Create("ScrollingFrame", {
         Name = "TabContainer",
-        Size = UDim2.new(0, 160, 1, -65),
+        Size = UDim2.new(0, 160, 1, -130),
         Position = UDim2.new(0, 10, 0, 55),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
@@ -180,7 +315,7 @@ function XenoUI:CreateWindow(config)
         Name = "ContentContainer",
         Size = UDim2.new(1, -185, 1, -65),
         Position = UDim2.new(0, 175, 0, 55),
-        BackgroundColor3 = Color3.fromRGB(22, 22, 22),
+        BackgroundColor3 = CurrentTheme.Secondary,
         BorderSizePixel = 0,
         Parent = Main
     })
@@ -190,18 +325,457 @@ function XenoUI:CreateWindow(config)
         Parent = ContentContainer
     })
     
+    -- Settings Panel (Hidden by default)
+    local SettingsPanel = Create("Frame", {
+        Name = "SettingsPanel",
+        Size = UDim2.new(1, -185, 1, -65),
+        Position = UDim2.new(0, 175, 0, 55),
+        BackgroundColor3 = CurrentTheme.Secondary,
+        BorderSizePixel = 0,
+        Visible = false,
+        Parent = Main
+    })
+    
+    Create("UICorner", {
+        CornerRadius = UDim.new(0, 8),
+        Parent = SettingsPanel
+    })
+    
+    local SettingsScroll = Create("ScrollingFrame", {
+        Size = UDim2.new(1, -20, 1, -20),
+        Position = UDim2.new(0, 10, 0, 10),
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        ScrollBarThickness = 4,
+        ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60),
+        CanvasSize = UDim2.new(0, 0, 0, 0),
+        Parent = SettingsPanel
+    })
+    
+    local SettingsLayout = Create("UIListLayout", {
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Padding = UDim.new(0, 8),
+        Parent = SettingsScroll
+    })
+    
+    SettingsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        SettingsScroll.CanvasSize = UDim2.new(0, 0, 0, SettingsLayout.AbsoluteContentSize.Y + 10)
+    end)
+    
+    -- Settings Title
+    local SettingsTitle = Create("TextLabel", {
+        Size = UDim2.new(1, 0, 0, 35),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamBold,
+        Text = "UI Settings",
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextSize = 18,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = SettingsScroll
+    })
+    
+    -- Theme Selector
+    local function CreateSettingsDropdown(name, options, current, callback)
+        local opened = false
+        local selected = current
+        
+        local DropdownFrame = Create("Frame", {
+            Name = name,
+            Size = UDim2.new(1, 0, 0, 45),
+            BackgroundColor3 = CurrentTheme.Element,
+            Parent = SettingsScroll
+        })
+        
+        Create("UICorner", {
+            CornerRadius = UDim.new(0, 8),
+            Parent = DropdownFrame
+        })
+        
+        local Label = Create("TextLabel", {
+            Size = UDim2.new(1, -120, 1, 0),
+            Position = UDim2.new(0, 15, 0, 0),
+            BackgroundTransparency = 1,
+            Font = Enum.Font.GothamSemibold,
+            Text = name,
+            TextColor3 = Color3.fromRGB(255, 255, 255),
+            TextSize = 15,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = DropdownFrame
+        })
+        
+        local DropdownBtn = Create("TextButton", {
+            Size = UDim2.new(0, 110, 0, 30),
+            Position = UDim2.new(1, -120, 0.5, -15),
+            BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+            Text = selected,
+            Font = Enum.Font.Gotham,
+            TextSize = 13,
+            TextColor3 = Color3.fromRGB(255, 255, 255),
+            Parent = DropdownFrame
+        })
+        
+        Create("UICorner", {
+            CornerRadius = UDim.new(0, 6),
+            Parent = DropdownBtn
+        })
+        
+        local Arrow = Create("TextLabel", {
+            Size = UDim2.new(0, 20, 1, 0),
+            Position = UDim2.new(1, -20, 0, 0),
+            BackgroundTransparency = 1,
+            Text = "▼",
+            Font = Enum.Font.GothamBold,
+            TextSize = 10,
+            TextColor3 = Color3.fromRGB(200, 200, 200),
+            Parent = DropdownBtn
+        })
+        
+        local DropdownList = Create("Frame", {
+            Name = "DropdownList",
+            Size = UDim2.new(0, 110, 0, 0),
+            Position = UDim2.new(1, -120, 1, 5),
+            BackgroundColor3 = Color3.fromRGB(35, 35, 35),
+            BorderSizePixel = 0,
+            Visible = false,
+            ClipsDescendants = true,
+            ZIndex = 10,
+            Parent = DropdownFrame
+        })
+        
+        Create("UICorner", {
+            CornerRadius = UDim.new(0, 6),
+            Parent = DropdownList
+        })
+        
+        local ListContainer = Create("ScrollingFrame", {
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            ScrollBarThickness = 4,
+            ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60),
+            CanvasSize = UDim2.new(0, 0, 0, 0),
+            Parent = DropdownList
+        })
+        
+        local ListLayout = Create("UIListLayout", {
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Padding = UDim.new(0, 2),
+            Parent = ListContainer
+        })
+        
+        ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            ListContainer.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y)
+        end)
+        
+        for _, option in ipairs(options) do
+            local OptionBtn = Create("TextButton", {
+                Size = UDim2.new(1, 0, 0, 30),
+                BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+                Text = option,
+                Font = Enum.Font.Gotham,
+                TextSize = 13,
+                TextColor3 = Color3.fromRGB(255, 255, 255),
+                Parent = ListContainer
+            })
+            
+            Create("UICorner", {
+                CornerRadius = UDim.new(0, 4),
+                Parent = OptionBtn
+            })
+            
+            OptionBtn.MouseButton1Click:Connect(function()
+                selected = option
+                DropdownBtn.Text = option
+                opened = false
+                Tween(DropdownList, {Size = UDim2.new(0, 110, 0, 0)}, 0.2)
+                Tween(Arrow, {Rotation = 0}, 0.2)
+                task.wait(0.2)
+                DropdownList.Visible = false
+                
+                callback(option)
+            end)
+            
+            OptionBtn.MouseEnter:Connect(function()
+                Tween(OptionBtn, {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}, 0.2)
+            end)
+            
+            OptionBtn.MouseLeave:Connect(function()
+                Tween(OptionBtn, {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}, 0.2)
+            end)
+        end
+        
+        DropdownBtn.MouseButton1Click:Connect(function()
+            opened = not opened
+            
+            if opened then
+                DropdownList.Visible = true
+                local height = math.min(#options * 32, 150)
+                Tween(DropdownList, {Size = UDim2.new(0, 110, 0, height)}, 0.2)
+                Tween(Arrow, {Rotation = 180}, 0.2)
+            else
+                Tween(DropdownList, {Size = UDim2.new(0, 110, 0, 0)}, 0.2)
+                Tween(Arrow, {Rotation = 0}, 0.2)
+                task.wait(0.2)
+                DropdownList.Visible = false
+            end
+        end)
+    end
+    
+    -- Theme Changer
+    CreateSettingsDropdown("Theme", {"Default", "Purple", "Green", "Red", "Orange"}, Window.Settings.Theme, function(theme)
+        Window.Settings.Theme = theme
+        CurrentTheme = Themes[theme]
+        
+        -- Update all colors
+        Main.BackgroundColor3 = CurrentTheme.Background
+        TopBar.BackgroundColor3 = CurrentTheme.TopBar
+        TopBar:FindFirstChild("Frame").BackgroundColor3 = CurrentTheme.TopBar
+        ContentContainer.BackgroundColor3 = CurrentTheme.Secondary
+        SettingsPanel.BackgroundColor3 = CurrentTheme.Secondary
+        UserInfoPanel.BackgroundColor3 = CurrentTheme.Element
+        
+        -- Update all tab buttons and elements
+        for _, tab in pairs(TabContainer:GetChildren()) do
+            if tab:IsA("TextButton") then
+                if Window.CurrentTab and Window.CurrentTab.Name == tab.Name then
+                    tab.BackgroundColor3 = CurrentTheme.Primary
+                end
+            end
+        end
+        
+        -- Update all UI elements in content
+        for _, content in pairs(ContentContainer:GetChildren()) do
+            if content:IsA("ScrollingFrame") then
+                for _, element in pairs(content:GetChildren()) do
+                    if element:IsA("Frame") and element.BackgroundColor3 ~= Color3.fromRGB(0, 0, 0) then
+                        element.BackgroundColor3 = CurrentTheme.Element
+                    end
+                end
+            end
+        end
+    end)
+    
+    -- Transparency Slider
+    local TransparencyFrame = Create("Frame", {
+        Name = "Transparency",
+        Size = UDim2.new(1, 0, 0, 60),
+        BackgroundColor3 = CurrentTheme.Element,
+        Parent = SettingsScroll
+    })
+    
+    Create("UICorner", {
+        CornerRadius = UDim.new(0, 8),
+        Parent = TransparencyFrame
+    })
+    
+    local TransLabel = Create("TextLabel", {
+        Size = UDim2.new(1, -70, 0, 25),
+        Position = UDim2.new(0, 15, 0, 8),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamSemibold,
+        Text = "Transparency",
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextSize = 15,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = TransparencyFrame
+    })
+    
+    local TransValue = Create("TextLabel", {
+        Size = UDim2.new(0, 60, 0, 25),
+        Position = UDim2.new(1, -70, 0, 8),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamBold,
+        Text = tostring(Window.Settings.Transparency),
+        TextColor3 = CurrentTheme.Primary,
+        TextSize = 15,
+        TextXAlignment = Enum.TextXAlignment.Right,
+        Parent = TransparencyFrame
+    })
+    
+    local SliderBack = Create("Frame", {
+        Size = UDim2.new(1, -30, 0, 8),
+        Position = UDim2.new(0, 15, 1, -20),
+        BackgroundColor3 = Color3.fromRGB(45, 45, 45),
+        BorderSizePixel = 0,
+        Parent = TransparencyFrame
+    })
+    
+    Create("UICorner", {
+        CornerRadius = UDim.new(1, 0),
+        Parent = SliderBack
+    })
+    
+    local SliderFill = Create("Frame", {
+        Size = UDim2.new(Window.Settings.Transparency / 100, 0, 1, 0),
+        BackgroundColor3 = CurrentTheme.Primary,
+        BorderSizePixel = 0,
+        Parent = SliderBack
+    })
+    
+    Create("UICorner", {
+        CornerRadius = UDim.new(1, 0),
+        Parent = SliderFill
+    })
+    
+    local dragging = false
+    
+    local SliderBtn = Create("TextButton", {
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        Text = "",
+        Parent = SliderBack
+    })
+    
+    SliderBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+        end
+    end)
+    
+    SliderBtn.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local percent = math.clamp((input.Position.X - SliderBack.AbsolutePosition.X) / SliderBack.AbsoluteSize.X, 0, 1)
+            local value = math.floor(percent * 100)
+            
+            SliderFill.Size = UDim2.new(percent, 0, 1, 0)
+            TransValue.Text = tostring(value)
+            Window.Settings.Transparency = value
+            
+            Main.BackgroundTransparency = value / 100
+        end
+    end)
+    
+    -- Show User Info Toggle
+    local function CreateSettingsToggle(name, currentValue, callback)
+        local ToggleFrame = Create("Frame", {
+            Name = name,
+            Size = UDim2.new(1, 0, 0, 45),
+            BackgroundColor3 = CurrentTheme.Element,
+            Parent = SettingsScroll
+        })
+        
+        Create("UICorner", {
+            CornerRadius = UDim.new(0, 8),
+            Parent = ToggleFrame
+        })
+        
+        local Label = Create("TextLabel", {
+            Size = UDim2.new(1, -60, 1, 0),
+            Position = UDim2.new(0, 15, 0, 0),
+            BackgroundTransparency = 1,
+            Font = Enum.Font.GothamSemibold,
+            Text = name,
+            TextColor3 = Color3.fromRGB(255, 255, 255),
+            TextSize = 15,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = ToggleFrame
+        })
+        
+        local ToggleOuter = Create("Frame", {
+            Size = UDim2.new(0, 45, 0, 24),
+            Position = UDim2.new(1, -55, 0.5, -12),
+            BackgroundColor3 = currentValue and CurrentTheme.Primary or Color3.fromRGB(50, 50, 50),
+            BorderSizePixel = 0,
+            Parent = ToggleFrame
+        })
+        
+        Create("UICorner", {
+            CornerRadius = UDim.new(1, 0),
+            Parent = ToggleOuter
+        })
+        
+        local ToggleInner = Create("Frame", {
+            Size = UDim2.new(0, 18, 0, 18),
+            Position = currentValue and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9),
+            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+            BorderSizePixel = 0,
+            Parent = ToggleOuter
+        })
+        
+        Create("UICorner", {
+            CornerRadius = UDim.new(1, 0),
+            Parent = ToggleInner
+        })
+        
+        local toggled = currentValue
+        
+        local ToggleBtn = Create("TextButton", {
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Text = "",
+            Parent = ToggleFrame
+        })
+        
+        ToggleBtn.MouseButton1Click:Connect(function()
+            toggled = not toggled
+            
+            if toggled then
+                Tween(ToggleInner, {Position = UDim2.new(1, -21, 0.5, -9)}, 0.2)
+                Tween(ToggleOuter, {BackgroundColor3 = CurrentTheme.Primary}, 0.2)
+            else
+                Tween(ToggleInner, {Position = UDim2.new(0, 3, 0.5, -9)}, 0.2)
+                Tween(ToggleOuter, {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}, 0.2)
+            end
+            
+            callback(toggled)
+        end)
+    end
+    
+    CreateSettingsToggle("Show User Info", Window.Settings.ShowUserInfo, function(value)
+        Window.Settings.ShowUserInfo = value
+        UserInfoPanel.Visible = value
+        
+        -- Adjust tab container size
+        if value then
+            TabContainer.Size = UDim2.new(0, 160, 1, -130)
+        else
+            TabContainer.Size = UDim2.new(0, 160, 1, -65)
+        end
+    end)
+    
+    CreateSettingsToggle("Anonymous Mode", Window.Settings.Anonymous, function(value)
+        Window.Settings.Anonymous = value
+        
+        if value then
+            Avatar.Image = ""
+            UsernameLabel.Text = "Anonymous"
+            DisplayNameLabel.Text = "User"
+        else
+            Avatar.Image = Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+            UsernameLabel.Text = "@" .. LocalPlayer.Name
+            DisplayNameLabel.Text = LocalPlayer.DisplayName
+        end
+    end)
+    
+    -- Settings Button Toggle
+    SettingsBtn.MouseButton1Click:Connect(function()
+        if SettingsPanel.Visible then
+            SettingsPanel.Visible = false
+            ContentContainer.Visible = true
+        else
+            SettingsPanel.Visible = true
+            ContentContainer.Visible = false
+        end
+    end)
+    
     -- Dragging
-    local dragging, dragInput, dragStart, startPos
+    local dragging2, dragInput, dragStart, startPos
     
     TopBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
+            dragging2 = true
             dragStart = input.Position
             startPos = Main.Position
             
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
+                    dragging2 = false
                 end
             end)
         end
@@ -214,7 +788,7 @@ function XenoUI:CreateWindow(config)
     end)
     
     RunService.RenderStepped:Connect(function()
-        if dragging and dragInput then
+        if dragging2 and dragInput then
             local delta = dragInput.Position - dragStart
             Main.Position = UDim2.new(
                 startPos.X.Scale,
@@ -294,6 +868,10 @@ function XenoUI:CreateWindow(config)
         
         -- Tab Selection
         TabBtn.MouseButton1Click:Connect(function()
+            -- Hide settings panel
+            SettingsPanel.Visible = false
+            ContentContainer.Visible = true
+            
             for _, tab in pairs(ContentContainer:GetChildren()) do
                 if tab:IsA("ScrollingFrame") then
                     tab.Visible = false
@@ -311,7 +889,7 @@ function XenoUI:CreateWindow(config)
             end
             
             TabContent.Visible = true
-            Tween(TabBtn, {BackgroundColor3 = Color3.fromRGB(40, 120, 255)}, 0.2)
+            Tween(TabBtn, {BackgroundColor3 = CurrentTheme.Primary}, 0.2)
             Tween(TabLabel, {TextColor3 = Color3.fromRGB(255, 255, 255)}, 0.2)
             Window.CurrentTab = Tab
         end)
@@ -331,7 +909,7 @@ function XenoUI:CreateWindow(config)
         -- Auto-select first tab
         if #Window.Tabs == 0 then
             TabContent.Visible = true
-            TabBtn.BackgroundColor3 = Color3.fromRGB(40, 120, 255)
+            TabBtn.BackgroundColor3 = CurrentTheme.Primary
             TabLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             Window.CurrentTab = Tab
         end
@@ -343,7 +921,7 @@ function XenoUI:CreateWindow(config)
             local ButtonFrame = Create("Frame", {
                 Name = "Button",
                 Size = UDim2.new(1, 0, 0, 45),
-                BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+                BackgroundColor3 = CurrentTheme.Element,
                 Parent = TabContent
             })
             
@@ -365,7 +943,7 @@ function XenoUI:CreateWindow(config)
             Button.MouseButton1Click:Connect(function()
                 Tween(ButtonFrame, {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}, 0.1)
                 task.wait(0.1)
-                Tween(ButtonFrame, {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}, 0.1)
+                Tween(ButtonFrame, {BackgroundColor3 = CurrentTheme.Element}, 0.1)
                 
                 if config.Callback then
                     pcall(config.Callback)
@@ -377,7 +955,7 @@ function XenoUI:CreateWindow(config)
             end)
             
             Button.MouseLeave:Connect(function()
-                Tween(ButtonFrame, {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}, 0.2)
+                Tween(ButtonFrame, {BackgroundColor3 = CurrentTheme.Element}, 0.2)
             end)
         end
         
@@ -386,7 +964,7 @@ function XenoUI:CreateWindow(config)
             local ToggleFrame = Create("Frame", {
                 Name = "Toggle",
                 Size = UDim2.new(1, 0, 0, 45),
-                BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+                BackgroundColor3 = CurrentTheme.Element,
                 Parent = TabContent
             })
             
@@ -445,10 +1023,10 @@ function XenoUI:CreateWindow(config)
                 if toggled then
                     if animate then
                         Tween(ToggleInner, {Position = UDim2.new(1, -21, 0.5, -9)}, 0.2)
-                        Tween(ToggleOuter, {BackgroundColor3 = Color3.fromRGB(40, 120, 255)}, 0.2)
+                        Tween(ToggleOuter, {BackgroundColor3 = CurrentTheme.Primary}, 0.2)
                     else
                         ToggleInner.Position = UDim2.new(1, -21, 0.5, -9)
-                        ToggleOuter.BackgroundColor3 = Color3.fromRGB(40, 120, 255)
+                        ToggleOuter.BackgroundColor3 = CurrentTheme.Primary
                     end
                 else
                     if animate then
@@ -483,7 +1061,7 @@ function XenoUI:CreateWindow(config)
             end)
             
             ToggleBtn.MouseLeave:Connect(function()
-                Tween(ToggleFrame, {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}, 0.2)
+                Tween(ToggleFrame, {BackgroundColor3 = CurrentTheme.Element}, 0.2)
             end)
             
             return {
@@ -498,7 +1076,7 @@ function XenoUI:CreateWindow(config)
             local SliderFrame = Create("Frame", {
                 Name = "Slider",
                 Size = UDim2.new(1, 0, 0, 60),
-                BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+                BackgroundColor3 = CurrentTheme.Element,
                 Parent = TabContent
             })
             
@@ -525,7 +1103,7 @@ function XenoUI:CreateWindow(config)
                 BackgroundTransparency = 1,
                 Font = Enum.Font.GothamBold,
                 Text = tostring(config.CurrentValue or config.Min),
-                TextColor3 = Color3.fromRGB(40, 120, 255),
+                TextColor3 = CurrentTheme.Primary,
                 TextSize = 15,
                 TextXAlignment = Enum.TextXAlignment.Right,
                 Parent = SliderFrame
@@ -548,7 +1126,7 @@ function XenoUI:CreateWindow(config)
             local SliderFill = Create("Frame", {
                 Name = "SliderFill",
                 Size = UDim2.new(0, 0, 1, 0),
-                BackgroundColor3 = Color3.fromRGB(40, 120, 255),
+                BackgroundColor3 = CurrentTheme.Primary,
                 BorderSizePixel = 0,
                 Parent = SliderBack
             })
@@ -572,7 +1150,7 @@ function XenoUI:CreateWindow(config)
                 Parent = SliderDot
             })
             
-            local dragging = false
+            local draggingSlider = false
             local min = config.Min or 0
             local max = config.Max or 100
             local increment = config.Increment or 1
@@ -609,20 +1187,20 @@ function XenoUI:CreateWindow(config)
             
             SliderBtn.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    dragging = true
+                    draggingSlider = true
                     Tween(SliderDot, {Size = UDim2.new(0, 20, 0, 20), Position = UDim2.new(1, -10, 0.5, -10)}, 0.15)
                 end
             end)
             
             SliderBtn.InputEnded:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    dragging = false
+                    draggingSlider = false
                     Tween(SliderDot, {Size = UDim2.new(0, 16, 0, 16), Position = UDim2.new(1, -8, 0.5, -8)}, 0.15)
                 end
             end)
             
             UserInputService.InputChanged:Connect(function(input)
-                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                if draggingSlider and input.UserInputType == Enum.UserInputType.MouseMovement then
                     local percent = math.clamp((input.Position.X - SliderBack.AbsolutePosition.X) / SliderBack.AbsoluteSize.X, 0, 1)
                     local value = min + (max - min) * percent
                     SetValue(value, true)
@@ -641,7 +1219,7 @@ function XenoUI:CreateWindow(config)
             local InputFrame = Create("Frame", {
                 Name = "Input",
                 Size = UDim2.new(1, 0, 0, 75),
-                BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+                BackgroundColor3 = CurrentTheme.Element,
                 Parent = TabContent
             })
             
@@ -746,7 +1324,7 @@ function XenoUI:CreateWindow(config)
             local DropdownFrame = Create("Frame", {
                 Name = "Dropdown",
                 Size = UDim2.new(1, 0, 0, 45),
-                BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+                BackgroundColor3 = CurrentTheme.Element,
                 Parent = TabContent
             })
             
@@ -941,7 +1519,7 @@ function XenoUI:CreateWindow(config)
         })
         
         Create("UIStroke", {
-            Color = Color3.fromRGB(40, 120, 255),
+            Color = CurrentTheme.Primary,
             Thickness = 2,
             Parent = Notification
         })
@@ -990,4 +1568,3 @@ function XenoUI:CreateWindow(config)
 end
 
 return XenoUI
-                
