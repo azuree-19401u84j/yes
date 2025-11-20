@@ -1,0 +1,203 @@
+-- Xeno Rayfield-style CMD UI Framework
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local CoreGui = game:GetService("CoreGui")
+
+-- Main UI Table
+local RayCMD = {}
+RayCMD.__index = RayCMD
+
+-- Create the main framework
+function RayCMD.new()
+    local self = setmetatable({}, RayCMD)
+    self.Windows = {}
+    return self
+end
+
+-- Create a window
+function RayCMD:CreateWindow(title, size)
+    local window = {}
+    window.Tabs = {}
+
+    -- GUI
+    window.ScreenGui = Instance.new("ScreenGui")
+    window.ScreenGui.Name = "RayCMD_UI_"..title
+    window.ScreenGui.Parent = CoreGui
+
+    window.MainFrame = Instance.new("Frame")
+    window.MainFrame.Size = size or UDim2.new(0,500,0,400)
+    window.MainFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
+    window.MainFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    window.MainFrame.BorderSizePixel = 1
+    window.MainFrame.BorderColor3 = Color3.fromRGB(0,255,0)
+    window.MainFrame.Parent = window.ScreenGui
+
+    -- Title
+    local TitleBar = Instance.new("Frame")
+    TitleBar.Size = UDim2.new(1,0,0,30)
+    TitleBar.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    TitleBar.BorderSizePixel = 1
+    TitleBar.BorderColor3 = Color3.fromRGB(0,255,0)
+    TitleBar.Parent = window.MainFrame
+
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Size = UDim2.new(1,-10,1,0)
+    TitleLabel.Position = UDim2.new(0,5,0,0)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Text = title
+    TitleLabel.TextColor3 = Color3.fromRGB(0,255,0)
+    TitleLabel.Font = Enum.Font.Code
+    TitleLabel.TextSize = 18
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.Parent = TitleBar
+
+    -- Tab holder
+    window.TabHolder = Instance.new("Frame")
+    window.TabHolder.Size = UDim2.new(1,0,1,-30)
+    window.TabHolder.Position = UDim2.new(0,0,0,30)
+    window.TabHolder.BackgroundTransparency = 1
+    window.TabHolder.Parent = window.MainFrame
+
+    setmetatable(window, {__index = RayCMD.Window})
+    table.insert(self.Windows, window)
+    return window
+end
+
+-- Window Methods
+RayCMD.Window = {}
+
+function RayCMD.Window:CreateTab(tabName)
+    local tab = {}
+    tab.Sections = {}
+
+    -- Container for tab
+    tab.Frame = Instance.new("Frame")
+    tab.Frame.Size = UDim2.new(1,0,1,0)
+    tab.Frame.BackgroundTransparency = 1
+    tab.Frame.Visible = true -- only active tab is visible
+    tab.Frame.Parent = self.TabHolder
+
+    -- Section container
+    tab.Container = Instance.new("ScrollingFrame")
+    tab.Container.Size = UDim2.new(1,-10,1,0)
+    tab.Container.Position = UDim2.new(0,5,0,0)
+    tab.Container.BackgroundTransparency = 1
+    tab.Container.ScrollBarThickness = 3
+    tab.Container.Parent = tab.Frame
+
+    local UIListLayout = Instance.new("UIListLayout")
+    UIListLayout.Parent = tab.Container
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout.Padding = UDim.new(0,5)
+
+    UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        tab.Container.CanvasSize = UDim2.new(0,0,0,UIListLayout.AbsoluteContentSize.Y)
+    end)
+
+    setmetatable(tab, {__index = RayCMD.Tab})
+    table.insert(self.Tabs, tab)
+    return tab
+end
+
+-- Tab Methods
+RayCMD.Tab = {}
+
+function RayCMD.Tab:CreateSection(name)
+    local section = {}
+    section.Elements = {}
+
+    section.Frame = Instance.new("Frame")
+    section.Frame.Size = UDim2.new(1,0,0,30)
+    section.Frame.BackgroundTransparency = 1
+    section.Frame.Parent = self.Container
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1,0,1,0)
+    label.BackgroundTransparency = 1
+    label.Text = name
+    label.TextColor3 = Color3.fromRGB(0,255,0)
+    label.Font = Enum.Font.Code
+    label.TextSize = 16
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = section.Frame
+
+    setmetatable(section, {__index = RayCMD.Section})
+    table.insert(self.Sections, section)
+    return section
+end
+
+-- Section Methods
+RayCMD.Section = {}
+
+function RayCMD.Section:CreateButton(text, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1,0,0,30)
+    btn.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    btn.BorderSizePixel = 1
+    btn.BorderColor3 = Color3.fromRGB(0,255,0)
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(0,255,0)
+    btn.Font = Enum.Font.Code
+    btn.TextSize = 16
+    btn.Parent = self.Frame
+
+    btn.MouseButton1Click:Connect(callback)
+end
+
+function RayCMD.Section:CreateToggle(text, default, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1,0,0,30)
+    frame.BackgroundTransparency = 1
+    frame.Parent = self.Frame
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.7,0,1,0)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Color3.fromRGB(0,255,0)
+    label.Font = Enum.Font.Code
+    label.TextSize = 16
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+
+    local toggle = Instance.new("TextButton")
+    toggle.Size = UDim2.new(0.3,-5,1,0)
+    toggle.Position = UDim2.new(0.7,5,0,0)
+    toggle.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    toggle.BorderColor3 = Color3.fromRGB(0,255,0)
+    toggle.Text = default and "ON" or "OFF"
+    toggle.TextColor3 = Color3.fromRGB(0,255,0)
+    toggle.Font = Enum.Font.Code
+    toggle.TextSize = 16
+    toggle.Parent = frame
+
+    local state = default
+    toggle.MouseButton1Click:Connect(function()
+        state = not state
+        toggle.Text = state and "ON" or "OFF"
+        callback(state)
+    end)
+end
+
+function RayCMD.Section:CreateTextbox(placeholder, callback)
+    local box = Instance.new("TextBox")
+    box.Size = UDim2.new(1,0,0,30)
+    box.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    box.BorderSizePixel = 1
+    box.BorderColor3 = Color3.fromRGB(0,255,0)
+    box.TextColor3 = Color3.fromRGB(0,255,0)
+    box.Font = Enum.Font.Code
+    box.TextSize = 16
+    box.PlaceholderText = placeholder
+    box.Parent = self.Frame
+
+    box.FocusLost:Connect(function(enterPressed)
+        if enterPressed then
+            callback(box.Text)
+            box.Text = ""
+        end
+    end)
+end
+
+-- Return the framework
+return RayCMD.new()
