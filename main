@@ -200,4 +200,5 @@ function RayCMD.Section:CreateTextbox(placeholder, callback)
 end
 
 -- Return the framework
-return RayCMD.new()
+return RayCMD
+
