@@ -553,6 +553,17 @@ function XenoUI:CreateWindow(config)
                 end
             end
         end
+        
+        -- Update settings elements
+        for _, element in pairs(SettingsScroll:GetChildren()) do
+            if element:IsA("Frame") and element.Name ~= "Transparency" then
+                element.BackgroundColor3 = CurrentTheme.Element
+            end
+        end
+        
+        TransparencyFrame.BackgroundColor3 = CurrentTheme.Element
+        TransValue.TextColor3 = CurrentTheme.Primary
+        SliderFill.BackgroundColor3 = CurrentTheme.Primary
     end)
     
     -- Transparency Slider
@@ -585,7 +596,7 @@ function XenoUI:CreateWindow(config)
         Position = UDim2.new(1, -70, 0, 8),
         BackgroundTransparency = 1,
         Font = Enum.Font.GothamBold,
-        Text = tostring(Window.Settings.Transparency),
+        Text = tostring(Window.Settings.Transparency) .. "%",
         TextColor3 = CurrentTheme.Primary,
         TextSize = 15,
         TextXAlignment = Enum.TextXAlignment.Right,
